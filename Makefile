@@ -32,7 +32,7 @@ ifdef NOSE_PACKAGES_TO_COVER
 NOSE_COVERAGE_OPTIONS += --cover-package=$(subst $(space),$(comma),$(strip $(NOSE_PACKAGES_TO_COVER)))
 endif
 
-.PHONY: help clean tests
+.PHONY: help clean tests coverage coveragehtml
 
 help:
 	@echo "Please use 'make <target>' where <target> is one of"
@@ -43,9 +43,13 @@ help:
 clean:
 	find . -name '*.pyc' -delete
 	$(RM) $(COVERAGE_OUTPUT_FILES)
+	rm -rf cover
 
 coverage:
 	$(NOSE) $(NOSE_OPTIONS) $(NOSE_COVERAGE_OPTIONS) $(NOSE_TARGET)
+
+coveragehtml:
+	$(NOSE) $(NOSE_OPTIONS) $(NOSE_COVERAGE_OPTIONS) $(NOSE_TARGET) --cover-html
 
 tests:
 	$(NOSE) $(NOSE_OPTIONS) $(NOSE_TARGET)
