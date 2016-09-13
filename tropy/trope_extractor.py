@@ -31,48 +31,10 @@ class Trope(object):
         return self.id == other.id
 
 
-class TropeExtractor(object):
+class BasePageHandler(object):
     """
-    Helper to extract tropes from a page
+    base methods for handling pages
     """
-
-    @classmethod
-    def get_tropes_from_page(cls, page_url):
-        """
-        extract tropes given a page
-        """
-
-        logging.info("attempting to get tropes for url: %s", page_url)
-        if not page_url:
-            logging.info("empty url... bailing")
-            return []
-
-        try:
-
-            # get the html content from a page
-            html_content = cls._get_html_content(page_url)
-            logging.debug('got content:%s from url:%s', html_content, page_url)
-
-            # convert to beautiful, beautiful soup
-            soup = BeautifulSoup(html_content, 'html.parser')
-            logging.debug('got soup:%s from url:%s', soup, page_url)
-
-            # get tropes from the html_content
-            tropes = cls._get_tropes_from_soup(soup)
-
-            return tropes
-
-        except TvTropeConnectionError:
-            logging.error("error connecting to tvtropes!")
-
-        except MissingContentError:
-            logging.error("tvtropes returned null content!")
-
-        except ContentParsingError:
-            logging.error("error parsing content!")
-
-        return []
-
     @classmethod
     def _get_html_content(cls, page_url):
         """
@@ -94,6 +56,69 @@ class TropeExtractor(object):
             )
 
         return resp.text
+
+    @classmethod
+    def get_from_url(cls, page_url):
+        """
+        get items, given a url
+        """
+
+        logging.info("attempting to get items for url: %s", page_url)
+        if not page_url:
+            logging.info("empty url... bailing")
+            return []
+
+        try:
+
+            # get the html content from a page
+            html_content = cls._get_html_content(page_url)
+            logging.debug('got content:%s from url:%s', html_content, page_url)
+
+            # convert to beautiful, beautiful soup
+            soup = BeautifulSoup(html_content, 'html.parser')
+            logging.debug('got soup:%s from url:%s', soup, page_url)
+
+            # get tropes from the html_content
+            items = cls._get_items_from_soup(soup)
+
+            return items
+
+        except TvTropeConnectionError:
+            logging.error("error connecting to tvtropes!")
+
+        except MissingContentError:
+            logging.error("tvtropes returned null content!")
+
+        except ContentParsingError:
+            logging.error("error parsing content!")
+
+        return []
+
+    @classmethod
+    def _get_items_from_soup(cls, soup):
+        """
+        BasePageHandler shouldn't implement this method
+        """
+        logging.exception("BasePageHandler's _get_items_from_soup called!")
+        raise NotImplementedError()
+
+
+class TropeExtractor(BasePageHandler):
+    """
+    Helper to extract tropes from a page
+    """
+
+    @classmethod
+    def get_tropes_from_page(cls, page_url):
+        """
+        extract tropes given a page
+        """
+        logging.info("attempting to get tropes for url: %s", page_url)
+        return cls.get_from_url(page_url)
+
+    @classmethod
+    def _get_items_from_soup(cls, soup):
+        return cls._get_tropes_from_soup(soup)
 
     @classmethod
     def _get_tropes_from_soup(cls, soup):
