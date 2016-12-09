@@ -75,6 +75,14 @@ class TestBasePageHandlerGetFromUrl(unittest.TestCase):
         actual = te.BasePageHandler.get_from_url(test_page_url)
         self.assertListEqual([], actual)
 
+    @mock.patch.object(te.BasePageHandler, "_get_html_content")
+    def test_for_ContentParsingError(self, mock_get):
+        test_page_url = 'dummy_url'
+        mock_get.side_effect = te.ContentParsingError
+
+        actual = te.BasePageHandler.get_from_url(test_page_url)
+        self.assertListEqual([], actual)
+
     @mock.patch.object(te.BasePageHandler, '_get_html_content')
     @mock.patch.object(te.BasePageHandler, '_get_items_from_soup')
     @mock.patch.object(te, 'BeautifulSoup')

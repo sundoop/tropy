@@ -1,3 +1,4 @@
+import attr
 import logging
 import re
 import requests
@@ -5,30 +6,16 @@ import requests
 from bs4 import BeautifulSoup
 
 
+@attr.s
 class Trope(object):
     """
     temp class to hold a trope
     """
 
-    def __init__(self, t_id, name, url, content=None):
-
-        self.id = t_id
-        self.name = name
-        self.url = url
-        self.content = content
-
-    def __repr__(self):
-        return "<Trope id:%s name:%s url:%s>" % (
-            self.id, self.name, self.url
-        )
-
-    def __str__(self):
-        return "<Trope id:%s name:%s url:%s>" % (
-            self.id, self.name, self.url
-        )
-
-    def __eq__(self, other):
-        return self.id == other.id
+    id = attr.ib()
+    name = attr.ib()
+    url = attr.ib()
+    content = attr.ib(default=None)
 
 
 class BasePageHandler(object):
@@ -147,7 +134,7 @@ class TropeExtractor(BasePageHandler):
                     name = tl.string
                     url = tl.get('href')
                     tropes.append(
-                        Trope(t_id=t_id, name=name, url=url, content=None)
+                        Trope(id=t_id, name=name, url=url, content=None)
                     )
                 except Exception:
                     logging.exception('error processing trope link:%s', tl)
