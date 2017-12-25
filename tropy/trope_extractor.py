@@ -12,10 +12,16 @@ class Trope(object):
     temp class to hold a trope
     """
 
-    id = attr.ib()
-    name = attr.ib()
-    url = attr.ib()
-    content = attr.ib(default=None)
+    id = attr.ib(default=attr.Factory(str))
+    type = attr.ib(default=attr.Factory(str))
+    name = attr.ib(default=attr.Factory(str))
+    url = attr.ib(default=attr.Factory(str))
+    content = attr.ib(default=attr.Factory(str))
+
+    def __str__(self):
+        return "<Trope id:%s type:%s url:%s>" % (
+            self.id, self.type, self.url
+        )
 
 
 class BasePageHandler(object):
@@ -92,7 +98,9 @@ class BasePageHandler(object):
 
 class TropeExtractor(BasePageHandler):
     """
-    Helper to extract tropes from a page
+    Class to extract tropes from a page
+
+    Use the get_tropes_from_page by providing the `page_url`
     """
 
     @classmethod
@@ -104,8 +112,48 @@ class TropeExtractor(BasePageHandler):
         return cls.get_from_url(page_url)
 
     @classmethod
+    def get_trope_from_url(cls, page_url):
+        """
+        create a Trope from a page url
+        """
+
+        # verify that its a valid trope page_url
+        if not page_url.startswith('http://tvtropes.org') or not page_url.startswith('http://tvtropes.org'):
+            raise ValueError("page_url: %s not tvtropes url" % page_url)
+
+        # Start filling out trope details
+        trope = Trope()
+        try:
+            trope = cls._get_trope_details(page_url)
+        except MissingContentError:
+            logging.info("missing content in page_url: %s", page_url)
+
+        return trope
+
+    @classmethod
     def _get_items_from_soup(cls, soup):
         return cls._get_tropes_from_soup(soup)
+
+    @classmethod
+    def _get_trope_details(cls, page_url):
+        """
+        Fill out the trope details given the page html
+        """
+        trope = Trope()
+        trope.url = page_url
+        trope.content = cls._get_html_content(page_url)
+        soup = BeautifulSoup(trope.content, 'html.parser')
+        title_result = soup.find('input', {'id': TvTropePageConstants.INPUT_RAW_TITLE})
+        type_result = soup.find('input', {'id': TvTropePageConstants.INPUT_GROUP_NAME})
+        if not title_result:
+            # not sure what to do here, bounce?
+            raise MissingContentError('not found id for trope url')
+
+        trope.id = title_result.get('value')
+        if type_result:
+            trope.type = type_result.get('value')
+
+        return trope
 
     @classmethod
     def _get_tropes_from_soup(cls, soup):
@@ -134,7 +182,7 @@ class TropeExtractor(BasePageHandler):
                     name = tl.string
                     url = tl.get('href')
                     tropes.append(
-                        Trope(id=t_id, name=name, url=url, content=None)
+                        Trope(id=t_id, name=name, url=url)
                     )
                 except Exception:
                     logging.exception('error processing trope link:%s', tl)
@@ -152,6 +200,8 @@ class TvTropePageConstants(object):
     TWIKILINK_CLASS = 'twikilink'
     PAGE_CONTENT_CLASS = 'page-content'
     URL_PREFIX_FOR_TROPE_LINKS = 'tvtropes.org/pmwiki/pmwiki.php/Main/'
+    INPUT_RAW_TITLE = 'title-hidden'
+    INPUT_GROUP_NAME = 'groupname-hidden'
 
 
 class TvTropeConnectionError(Exception):
