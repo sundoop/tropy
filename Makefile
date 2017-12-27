@@ -22,7 +22,7 @@ PEP8_ALL_OPTS = $(PEP8_TARGET) $(PEP8_OPTS)
 NOSE_PACKAGES_TO_COVER = tropy
 NOSE_EXCLUDE_DIRS =
 COVERAGE_OUTPUT_FILES = .coverage coverage.xml nosetests.xml
-NOSE_OPTIONS += --no-byte-compile --no-path-adjustment --verbose
+NOSE_OPTIONS += --no-byte-compile --no-path-adjustment --verbose -s
 NOSE_COVERAGE_OPTIONS = --cover-branches --cover-erase --cover-tests --with-coverage
 
 ifdef NOSE_EXCLUDE_DIRS
